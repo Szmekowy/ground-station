@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  communication:
+    build: ./src/Communication
+    ports:
+      - "8001:8001"
+
+  backend:
+    build: ./src/Backend
+    ports:
+      - "8002:8002"
+    depends_on:
+      - communication
+
+  ai:
+    build: ./src/AI
+    ports:
+      - "8003:8003"
+    depends_on:
+      - backend
+
+  ui:
+    build: ./src/UI
+    ports:
+      - "8000:8000"
+    depends_on:
+      - backend
