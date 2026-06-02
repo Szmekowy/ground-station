@@ -1,6 +1,6 @@
 # MQTT - komunikacja z balonem i prototyp przeplywu danych
 
-Ten dokument opisuje, jak ma dzialac komunikacja po MQTT w projekcie Ground Station oraz jak dziala obecny prototyp przygotowany na kontenerach `AI` i `Test`.
+Ten dokument opisuje, jak ma dzialac komunikacja po MQTT w projekcie Ground Station oraz jak dziala obecny prototyp przygotowany na kontenerach `AI` i `Test` w folderze test/MQTT_TEST.
 
 ## Cel komunikacji
 
