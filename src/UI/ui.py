@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import numpy as np
 
 import sys
 
@@ -39,9 +38,11 @@ class UI:
         (self.pressure_line,) = self.pressure_plt.plot([], [])
 
         self.temperature_plt.set_title("Temperature [°C]")
-        self.location_plt.set_title("Location")
         self.altitude_plt.set_title("Altitude [m]")
         self.pressure_plt.set_title("Pressure [hPa]")
+        self.location_plt.set_title("Location")
+        self.location_plt.set_xlabel("Longitude")
+        self.location_plt.set_ylabel("Latitude")
 
         self._set_time_formatting(self.temperature_plt)
         self._set_time_formatting(self.altitude_plt)
@@ -110,7 +111,6 @@ class UI:
         self.location_plt.autoscale_view()
 
         self.redraw_plots()
-
 
 def _on_plot_closed(event):
     print("Closed the plot")

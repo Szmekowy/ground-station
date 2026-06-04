@@ -1,7 +1,6 @@
 import time
 from ui import UI
 
-# for testing
 import random
 import datetime
 
@@ -10,7 +9,6 @@ print("UI started")
 ui_module = UI()
 
 ui_module.initialize_ui()
-
 
 # testing data
 temp_readings = []
@@ -22,8 +20,6 @@ gps_location = [18.606, 54.368]
 temp = 20.0
 altitude = 100
 pressure = 1000
-
-
 
 while True:
     temp += (random.random() * 2 - 1.0) * 0.2
