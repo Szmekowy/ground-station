@@ -1,4 +1,7 @@
+import matplotlib
+matplotlib.use('TkAgg')
 import time
+
 from ui import UI
 
 import random
