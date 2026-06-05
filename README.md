@@ -64,7 +64,7 @@ xhost +local:docker
 docker run --rm \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-  ground-ui
+  -p 8000:8000 ground-ui
 ```
 
 Po uruchomieniu kontener wypisuje logi w terminalu. Zatrzymanie kontenera: `Ctrl+C`.
