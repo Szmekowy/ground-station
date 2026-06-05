@@ -60,6 +60,7 @@ docker run --rm -p 8003:8003 ground-ai
 ```bash
 docker build -t ground-ui ./src/UI
 # linux / windows (wsl)
+xhost +local:docker
 docker run --rm \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
