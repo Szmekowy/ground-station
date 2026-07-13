@@ -45,7 +45,7 @@ def publish_test_data(): #publikuje testowe dane do backendu  // w przyszlosci z
             json_data
         )
 
-        print("Published:", json_data)
+        print("Published for backend:", json_data)
 
         time.sleep(SEND_INTERVAL)
 

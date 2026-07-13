@@ -5,13 +5,14 @@ import paho.mqtt.client as mqtt
 
 MQTT_BROKER = "mqtt"
 MQTT_PORT = 1883
-MQTT_TOPIC = "balloon/raw"
+MQTT_TOPIC_RAW = "balloon/raw"
+MQTT_TOPIC_PROCESSED = "balloon/processed"
 
 RAW_DATA_FILE = "data/raw/telemetry.jsonl"
 PROCESSED_DATA_FILE = "data/processed/telemetry.jsonl"
 
 def save_data(data, PATH): #zapis surowych danych do pliku
-
+    print(PATH)
     os.makedirs(
         os.path.dirname(PATH),
         exist_ok=True
@@ -42,19 +43,26 @@ def on_message(client, userdata, msg): #backend odpytuje MQTT czy są nowe dane 
         msg.payload.decode("utf-8")
     )
 
-    print("Received:")
-    print(data)
-
-
-    save_data(data, PATH=RAW_DATA_FILE)
+    save_data(data, PATH=RAW_DATA_FILE) #zapis surowych danych do plików (dla testów)
 
 
     processed = process_data(data)
 
-    print("Processed:")
-    print(processed)
+    save_data(processed, PATH=PROCESSED_DATA_FILE) #zapis danych przetworzonych do pliku (dla testów)
 
-    save_data(processed, PATH=PROCESSED_DATA_FILE)
+    publish_data(processed) #publikacja danych przetworzonych do UI
+
+def publish_data(data):
+
+    json_data = json.dumps(data)
+
+    client.publish(
+        MQTT_TOPIC_PROCESSED,
+        json_data
+    )
+
+    print("Published for UI:", json_data)
+
 
 if __name__ == "__main__":
     client = mqtt.Client()
@@ -67,14 +75,19 @@ if __name__ == "__main__":
         MQTT_PORT
     )
 
-
+    #Połączenie backendu z Communication backend otrzymuje dane w balloon/raw
     client.subscribe(
-        MQTT_TOPIC
+        MQTT_TOPIC_RAW
     )
 
 
     print(
-        f"Backend listening on {MQTT_TOPIC}"
+        f"Backend listening on {MQTT_TOPIC_RAW}"
+        
+    )
+    print(
+        f"Backend sending on {MQTT_TOPIC_PROCESSED}"
+        
     )
 
 
