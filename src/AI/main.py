@@ -1,4 +1,7 @@
+import time
 print("AI started")
 
 while True:
-    print("AI petla")
+    print("AI petlas")
+    
+    time.sleep(500)
