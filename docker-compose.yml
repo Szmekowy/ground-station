@@ -26,12 +26,6 @@ services:
       - "8000:8000"
     depends_on:
       - backend
-  test:
-    build: ./src/Test
-    ports:
-      - "8004:8004"
-    depends_on:
-      - backend
   mqtt:
     image: eclipse-mosquitto
     ports:
