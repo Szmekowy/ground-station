@@ -6,7 +6,9 @@ ENV PYTHONUNBUFFERED=1
 
 # Required to display the GUI
 RUN apt-get update && apt-get install -y \
-    python3-tk \
+    libglfw3 \
+    libgl1 \
+    libx11-6 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
