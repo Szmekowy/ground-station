@@ -1,6 +1,4 @@
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import sys
+import dearpygui.dearpygui as dpg
 
 # expected parameters
 # - temperature
@@ -8,109 +6,118 @@ import sys
 # - altitude
 # - atm. pressure
 
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 400
 
 class UI:
-    figure: plt.Figure
-    temperature_plt: plt.Axes
-    location_plt: plt.Axes
-    altitude_plt: plt.Axes
-    pressure_plt: plt.Axes
+    _altitude_readings = []
+    _pressure_readings = []
+    _battery_readings = []
 
     def __init__(self):
-        pass
+        self.battery_series = None
+        self.pressure_series = None
+        self.altitude_series = None
+
+        self._gui_ready = False
+
+    def _cut_line_btn_pressed(self):
+        return
+
+    def _reset_graphs_btn_pressed(self):
+        return
+
+    def _create_main_view(self):
+        dpg.add_text("Telemetry Data", color=[0, 200, 255])
+        with dpg.subplots(rows=2, columns=2, width=-1, height=-30): 
+            with dpg.plot(label="Battery (%)", height=-1, width=-1):
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, tag="battery_x")
+                dpg.add_plot_axis(dpg.mvYAxis, tag="battery_y")
+                self.battery_series = dpg.add_line_series([], [], parent="battery_y")
+
+            with dpg.plot(label="Pressure (hPa)", height=-1, width=-1):
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, tag="pressure_x")
+                dpg.add_plot_axis(dpg.mvYAxis, tag="pressure_y")
+                self.pressure_series = dpg.add_line_series([], [], parent="pressure_y")
+
+            with dpg.plot(label="Altitude (m)", height=-1, width=-1):
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, tag="altitude_x")
+                dpg.add_plot_axis(dpg.mvYAxis, tag="altitude_y")
+                self.altitude_series = dpg.add_line_series([], [], parent="altitude_y")
+
+            with dpg.plot(label="GPS Coordinates", height=-1, width=-1):
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis)
+                dpg.add_plot_axis(dpg.mvYAxis)
+
+        with dpg.group(horizontal=True, height=30):
+            dpg.add_button(label="Cut the Line", callback=self._cut_line_btn_pressed)
+            dpg.add_button(label="Reset Telemetry", callback=self._reset_graphs_btn_pressed)
 
     def initialize_ui(self):
-        plt.ion()
-        f, ax = plt.subplots(2, 2)
+        dpg.create_context()
+        dpg.create_viewport(
+            title='Pi Dashboard',
+            width=WINDOW_WIDTH,
+            height=WINDOW_HEIGHT,
+            min_width=WINDOW_WIDTH,
+            max_width=WINDOW_WIDTH,
+            min_height=WINDOW_HEIGHT,
+            max_height=WINDOW_HEIGHT,
+            resizable=False
+        )
 
-        self.figure = f
-        self.figure.set_layout_engine('tight')
+        with dpg.window(tag="main_window"):
+            self._create_main_view()
 
-        self.temperature_plt = ax[0, 0]
-        self.location_plt = ax[1, 0]
-        self.altitude_plt = ax[0, 1]
-        self.pressure_plt = ax[1, 1]
+        dpg.set_primary_window("main_window", True)
+        dpg.setup_dearpygui()
+        dpg.show_viewport()
 
-        (self.temp_line,) = self.temperature_plt.plot([], [])
-        (self.alt_line,) = self.altitude_plt.plot([], [])
-        (self.location_line,) = self.location_plt.plot([], [])
-        (self.pressure_line,) = self.pressure_plt.plot([], [])
+        self._gui_ready = True
 
-        self.temperature_plt.set_title("Temperature [°C]")
-        self.altitude_plt.set_title("Altitude [m]")
-        self.pressure_plt.set_title("Pressure [hPa]")
-        self.location_plt.set_title("Location")
-        self.location_plt.set_xlabel("Longitude")
-        self.location_plt.set_ylabel("Latitude")
+        dpg.start_dearpygui()
+        dpg.destroy_context()
 
-        self._set_time_formatting(self.temperature_plt)
-        self._set_time_formatting(self.altitude_plt)
-        self._set_time_formatting(self.pressure_plt)
-        self._set_location_formatting()
+    def update_altitude(self, reading):
+        self._altitude_readings.append(reading)
+        if not self._gui_ready:
+            return
 
-        self.figure.canvas.mpl_connect('close_event', _on_plot_closed)
+        xs = [r['time'] for r in self._altitude_readings]
+        ys = [r['altitude'] for r in self._altitude_readings]
 
-        plt.show()
-        plt.pause(1)
+        dpg.set_value(self.altitude_series, [xs, ys])
+        dpg.fit_axis_data("altitude_x")
+        dpg.fit_axis_data("altitude_y")
 
-    def _set_time_formatting(self, ax: plt.Axes):
-        # properly format timestamps on x axis and rotate them 30 degrees
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
-        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-        ax.tick_params(axis='x', labelrotation=30, labelbottom=True)
+    def update_pressure(self, reading):
+        self._pressure_readings.append(reading)
+        if not self._gui_ready:
+            return
 
-    def _set_location_formatting(self):
-        self.location_plt.set_aspect('equal', adjustable='datalim')
+        xs = [r['time'] for r in self._pressure_readings]
+        ys = [r['pressure'] for r in self._pressure_readings]
 
-    def redraw_plots(self):
-        plt.draw()
-        plt.pause(0.1)
+        dpg.set_value(self.pressure_series, [xs, ys])
+        dpg.fit_axis_data("pressure_x")
+        dpg.fit_axis_data("pressure_y")
 
-    def update_temperature(self, readings: list):
-        xs = [reading['time'] for reading in readings]
-        ys = [reading['temp'] for reading in readings]
-        self.temp_line.set_xdata(xs)
-        self.temp_line.set_ydata(ys)
+    def update_battery(self, reading):
+        self._battery_readings.append(reading)
+        if not self._gui_ready:
+            return
 
-        self.temperature_plt.relim()
-        self.temperature_plt.autoscale_view()
+        xs = [r['time'] for r in self._battery_readings]
+        ys = [r['battery'] for r in self._battery_readings]
 
-        self.redraw_plots()
+        dpg.set_value(self.battery_series, [xs, ys])
+        dpg.fit_axis_data("battery_x")
+        dpg.fit_axis_data("battery_y")
 
-    def update_altitude(self, readings: list):
-        xs = [reading['time'] for reading in readings]
-        ys = [reading['alt'] for reading in readings]
-        self.alt_line.set_xdata(xs)
-        self.alt_line.set_ydata(ys)
-
-        self.altitude_plt.relim()
-        self.altitude_plt.autoscale_view()
-
-        self.redraw_plots()
-
-    def update_pressure(self, readings: list):
-        xs = [reading['time'] for reading in readings]
-        ys = [reading['pressure'] for reading in readings]
-        self.pressure_line.set_xdata(xs)
-        self.pressure_line.set_ydata(ys)
-
-        self.pressure_plt.relim()
-        self.pressure_plt.autoscale_view()
-
-        self.redraw_plots()
-
-    def update_location(self, readings: list):
-        xs = [reading['longitude'] for reading in readings]
-        ys = [reading['latitude'] for reading in readings]
-
-        self.location_line.set_xdata(xs)
-        self.location_line.set_ydata(ys)
-
-        self.location_plt.relim()
-        self.location_plt.autoscale_view()
-
-        self.redraw_plots()
-
-def _on_plot_closed(event):
-    print("Closed the plot")
-    sys.exit(0)
+if __name__ == "__main__":
+    ui = UI()
+    ui.initialize_ui()
