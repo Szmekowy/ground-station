@@ -1,1 +1,4 @@
+
+RPi.GPIO
+spidev
 paho-mqtt
