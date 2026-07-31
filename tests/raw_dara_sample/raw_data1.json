@@ -1,0 +1,10 @@
+{
+    "timestamp": 1689012345,
+    "temperature": -45.5,
+    "pressure": -10.0,
+    "position": {
+        "x": 15.2,
+        "y": null,
+        "z": -500.0
+    }
+}

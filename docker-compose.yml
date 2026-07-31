@@ -1,10 +1,18 @@
 version: "3.8"
 
 services:
+
+  mqtt:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+
   communication:
     build: ./src/Communication
     ports:
       - "8001:8001"
+    depends_on:
+      - mqtt
 
   backend:
     build: ./src/Backend
@@ -12,6 +20,8 @@ services:
       - "8002:8002"
     depends_on:
       - communication
+    volumes:
+      - ./data:/workspace/data
 
   ai:
     build: ./src/AI
@@ -26,15 +36,7 @@ services:
       - "8000:8000"
     depends_on:
       - backend
-  test:
-    build: ./src/Test
-    ports:
-      - "8004:8004"
-    depends_on:
-      - backend
-  mqtt:
-    image: eclipse-mosquitto
-    ports:
-      - "1883:1883"
-    depends_on:
-      - backend
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
