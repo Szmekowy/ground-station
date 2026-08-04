@@ -1,27 +1,13 @@
 import json
 import os
 import paho.mqtt.client as mqtt
+from storage.JSON.json_storage import JsonStorage
 
 
 MQTT_BROKER = "mqtt"
 MQTT_PORT = 1883
 MQTT_TOPIC_RAW = "balloon/raw"
 MQTT_TOPIC_PROCESSED = "balloon/processed"
-
-RAW_DATA_FILE = "data/raw/telemetry.jsonl"
-PROCESSED_DATA_FILE = "data/processed/telemetry.jsonl"
-
-def save_data(data, PATH): #zapis surowych danych do pliku
-    print(PATH)
-    os.makedirs(
-        os.path.dirname(PATH),
-        exist_ok=True
-    )
-
-    with open(PATH, "a") as file:
-        file.write(
-            json.dumps(data) + "\n"
-        )
 
 
 def process_data(data): #processing testowych danych
@@ -35,20 +21,20 @@ def process_data(data): #processing testowych danych
 
     return processed
 
-
 def on_message(client, userdata, msg): #backend odpytuje MQTT czy są nowe dane jeżeli tak to przetwarza i zapisuje dane do plików
 
+    storage = JsonStorage()
 
     data = json.loads(
         msg.payload.decode("utf-8")
     )
 
-    save_data(data, PATH=RAW_DATA_FILE) #zapis surowych danych do plików (dla testów)
+    storage.save_raw(data) #zapis surowych danych do plików (dla testów)
 
 
     processed = process_data(data)
 
-    save_data(processed, PATH=PROCESSED_DATA_FILE) #zapis danych przetworzonych do pliku (dla testów)
+    storage.save_processed(processed) #zapis danych przetworzonych do pliku (dla testów)
 
     publish_data(processed) #publikacja danych przetworzonych do UI
 
