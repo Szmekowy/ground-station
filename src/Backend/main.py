@@ -2,13 +2,14 @@ import json
 import os
 import paho.mqtt.client as mqtt
 from storage.JSON.json_storage import JsonStorage
-
+from storage.JSON.json_read import JsonReader
 
 MQTT_BROKER = "mqtt"
 MQTT_PORT = 1883
 MQTT_TOPIC_RAW = "balloon/raw"
 MQTT_TOPIC_PROCESSED = "balloon/processed"
-
+storage = JsonStorage()
+reader = JsonReader()
 
 def process_data(data): #processing testowych danych
 
@@ -23,7 +24,6 @@ def process_data(data): #processing testowych danych
 
 def on_message(client, userdata, msg): #backend odpytuje MQTT czy są nowe dane jeżeli tak to przetwarza i zapisuje dane do plików
 
-    storage = JsonStorage()
 
     data = json.loads(
         msg.payload.decode("utf-8")
