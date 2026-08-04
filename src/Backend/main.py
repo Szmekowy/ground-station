@@ -52,21 +52,34 @@ def publish_data(data):
 
 def database_connection_test():
     
-    try:
+    from storage.database.models import Telemetry
+    from storage.database.connection import get_session
 
-        session = get_session()
 
-        print("Database connection OKKKKK")
+    session = get_session()
 
-        session.close()
+    test = Telemetry(
+        timestamp=123456789,
+        x=10,
+        y=20,
+        z=300,
+        battery=90,
+        pressure=1000,
+        raw_data={
+            "test": True
+        }
+    )
 
-    except Exception as e:
 
-        print("Database error:")
-        print(e)
+    session.add(test)
+    session.commit()
+
+    print("Inserted!")
+
+    session.close()
 
 if __name__ == "__main__":
-    database_connection_test()
+    #database_connection_test()
     client = mqtt.Client()
 
     client.on_message = on_message
