@@ -6,6 +6,19 @@ services:
     image: eclipse-mosquitto
     ports:
       - "1883:1883"
+  
+  postgres:
+    image: postgres:16
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ground_station
+
+    ports:
+      - "5432:5432"
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
 
   communication:
     build: ./src/Communication
@@ -20,6 +33,7 @@ services:
       - "8002:8002"
     depends_on:
       - communication
+      - postgres
     volumes:
       - ./data:/workspace/data
 
@@ -40,3 +54,6 @@ services:
       - DISPLAY=${DISPLAY:-:0}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
+
+volumes:
+  postgres_data:
