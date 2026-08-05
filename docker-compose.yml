@@ -36,7 +36,9 @@ services:
       - postgres
     volumes:
       - ./data:/workspace/data
-
+      - ./tests:/workspace/tests
+    environment:
+    - PYTHONPATH=/workspace
   ai:
     build: ./src/AI
     ports:
