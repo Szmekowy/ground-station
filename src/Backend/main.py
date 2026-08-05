@@ -3,13 +3,20 @@ import os
 import paho.mqtt.client as mqtt
 from storage.JSON.json_storage import JsonStorage
 from storage.JSON.json_read import JsonReader
+from storage.database.database_storage import DatabaseStorage
 from storage.database.connection import get_session
 
 MQTT_BROKER = "mqtt"
 MQTT_PORT = 1883
 MQTT_TOPIC_RAW = "balloon/raw"
 MQTT_TOPIC_PROCESSED = "balloon/processed"
-storage = JsonStorage()
+
+session = get_session()
+
+storage = DatabaseStorage(
+    session
+)
+#storage = JsonStorage()
 reader = JsonReader()
 
 def process_data(data): #processing testowych danych
@@ -50,36 +57,8 @@ def publish_data(data):
 
     print("Published for UI:", json_data)
 
-def database_connection_test():
-    
-    from storage.database.models import Telemetry
-    from storage.database.connection import get_session
-
-
-    session = get_session()
-
-    test = Telemetry(
-        timestamp=123456789,
-        x=10,
-        y=20,
-        z=300,
-        battery=90,
-        pressure=1000,
-        raw_data={
-            "test": True
-        }
-    )
-
-
-    session.add(test)
-    session.commit()
-
-    print("Inserted!")
-
-    session.close()
-
 if __name__ == "__main__":
-    #database_connection_test()
+
     client = mqtt.Client()
 
     client.on_message = on_message

@@ -1,7 +1,7 @@
-from storage.database.models import Telemetry
+from storage.database.models import RawTelemetry
 
 
-class TelemetryRepository:
+class RawRepository:
 
     def __init__(self, session):
         self.session = session
@@ -9,7 +9,8 @@ class TelemetryRepository:
 
     def save(self, data):
 
-        telemetry = Telemetry(
+        telemetry = RawTelemetry(
+
             timestamp=data["timestamp"],
 
             x=data["position"]["x"],

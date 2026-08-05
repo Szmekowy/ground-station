@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, Integer, Float, DateTime, JSON
+from sqlalchemy import Column, Integer, Float, JSON
 
 
 class Base(DeclarativeBase):
@@ -7,9 +7,9 @@ class Base(DeclarativeBase):
 
 
 
-class Telemetry(Base):
+class RawTelemetry(Base):
 
-    __tablename__ = "telemetry"
+    __tablename__ = "raw_telemetry"
 
 
     id = Column(
@@ -19,7 +19,8 @@ class Telemetry(Base):
 
 
     timestamp = Column(
-        Float
+        Float,
+        nullable=False
     )
 
 
@@ -51,3 +52,57 @@ class Telemetry(Base):
     raw_data = Column(
         JSON
     )
+
+
+
+class ProcessedTelemetry(Base):
+
+    __tablename__ = "processed_telemetry"
+
+
+    id = Column(
+        Integer,
+        primary_key=True
+    )
+
+
+    timestamp = Column(
+        Float,
+        nullable=False
+    )
+
+
+    altitude = Column(
+        Float
+    )
+
+
+    battery = Column(
+        Float
+    )
+
+
+    pressure = Column(
+        Float
+    )
+
+
+    processed_data = Column(
+        JSON
+    )
+
+
+
+# TODO:
+# class Alarm(Base):
+#     pass
+
+
+# TODO:
+# class Command(Base):
+#     pass
+
+
+# TODO:
+# class Log(Base):
+#     pass

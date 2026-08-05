@@ -1,4 +1,4 @@
-from models import Base
+from models import Base, RawTelemetry, ProcessedTelemetry
 from connection import engine
 
 

@@ -1,13 +1,15 @@
 import os
 import json
 
+from storage.storage import Storage
+
 from .paths import RAW_DATA_FILE
 from .paths import PROCESSED_DATA_FILE
 from .paths import ALARMS_FILE
 from .paths import COMMANDS_FILE
 from .paths import LOGS_FILE
 
-class JsonStorage:
+class JsonStorage(Storage):
     def __init__(self):
         pass
 
