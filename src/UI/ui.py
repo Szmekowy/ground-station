@@ -1,18 +1,17 @@
 import dearpygui.dearpygui as dpg
-
-# expected parameters
-# - temperature
-# - location (latiture, longitude)
-# - altitude
-# - atm. pressure
+from ui_modules.alert import AlertManager, AlertType
+from ui_modules.topbar import Topbar
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 400
 
+LOW_BATTERY_THRESHOLD = 60.0
+
+
+
 class UI:
     _altitude_readings = []
     _pressure_readings = []
-    _battery_readings = []
 
     def __init__(self):
         self.battery_series = None
@@ -28,14 +27,8 @@ class UI:
         return
 
     def _create_main_view(self):
-        dpg.add_text("Telemetry Data", color=[0, 200, 255])
-        with dpg.subplots(rows=2, columns=2, width=-1, height=-30): 
-            with dpg.plot(label="Battery (%)", height=-1, width=-1):
-                dpg.add_plot_legend()
-                dpg.add_plot_axis(dpg.mvXAxis, tag="battery_x")
-                dpg.add_plot_axis(dpg.mvYAxis, tag="battery_y")
-                self.battery_series = dpg.add_line_series([], [], parent="battery_y")
-
+        Topbar.create()
+        with dpg.subplots(rows=2, columns=2, width=-1, height=-30):
             with dpg.plot(label="Pressure (hPa)", height=-1, width=-1):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, tag="pressure_x")
@@ -56,6 +49,7 @@ class UI:
         with dpg.group(horizontal=True, height=30):
             dpg.add_button(label="Cut the Line", callback=self._cut_line_btn_pressed)
             dpg.add_button(label="Reset Telemetry", callback=self._reset_graphs_btn_pressed)
+            dpg.add_button(label="Test button", callback=self._test_btn_pressed)
 
     def initialize_ui(self):
         dpg.create_context()
@@ -77,9 +71,13 @@ class UI:
         dpg.setup_dearpygui()
         dpg.show_viewport()
 
+        AlertManager.initialize()
+
         self._gui_ready = True
 
-        dpg.start_dearpygui()
+        while dpg.is_dearpygui_running():
+            Topbar.update_time()
+            dpg.render_dearpygui_frame()
         dpg.destroy_context()
 
     def update_altitude(self, reading):
@@ -107,16 +105,19 @@ class UI:
         dpg.fit_axis_data("pressure_y")
 
     def update_battery(self, reading):
-        self._battery_readings.append(reading)
         if not self._gui_ready:
             return
 
-        xs = [r['time'] for r in self._battery_readings]
-        ys = [r['battery'] for r in self._battery_readings]
+        Topbar.update_battery(reading)
 
-        dpg.set_value(self.battery_series, [xs, ys])
-        dpg.fit_axis_data("battery_x")
-        dpg.fit_axis_data("battery_y")
+        if reading <= LOW_BATTERY_THRESHOLD:
+            self._on_low_battery(reading)
+
+    def _test_btn_pressed(self):
+        pass
+
+    def _on_low_battery(self, battery_level: float):
+        AlertManager.show_alert(AlertType.LOW_BATTERY)
 
 if __name__ == "__main__":
     ui = UI()

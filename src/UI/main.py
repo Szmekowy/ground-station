@@ -21,7 +21,7 @@ def update_ui(data):
     battery = data['battery']
     alt = data['altitude']
     pressure = data['pressure']
-    ui_module.update_battery({'time': time, 'battery': battery})
+    ui_module.update_battery(battery)
     ui_module.update_altitude({'time': time, 'altitude': alt})
     ui_module.update_pressure({'time': time, 'pressure': pressure})
 
