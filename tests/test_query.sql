@@ -1,0 +1,5 @@
+
+SELECT *
+FROM raw_telemetry
+ORDER BY id DESC
+LIMIT 10;
