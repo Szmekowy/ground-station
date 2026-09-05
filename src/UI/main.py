@@ -2,11 +2,10 @@ from ui import UI
 
 import paho.mqtt.client as mqtt
 import json
+from config.mqtt import MQTTTopics as Topics
+from config.mqtt import MQTTConfig 
 
 
-MQTT_BROKER = "mqtt"
-MQTT_PORT = 1883
-MQTT_TOPIC = "balloon/processed"
 
 def on_message(client, userdata, msg):
 
@@ -31,13 +30,13 @@ client.on_message = on_message
 
 
 client.connect( #połączenie z MQTT
-    MQTT_BROKER,
-    MQTT_PORT
+    MQTTConfig.BROKER,
+    MQTTConfig.PORT
 )
 
 #Połączenie backendu z UI UI otrzymuje dane w balloon/processed
 client.subscribe(
-    MQTT_TOPIC
+    Topics.PROCESSED
 )
 client.loop_start()
 
