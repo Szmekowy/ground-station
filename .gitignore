@@ -1,3 +1,5 @@
 .exe
 data/processed
 data/raw
+__pycache__/
+*.py[cod]

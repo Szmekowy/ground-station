@@ -3,7 +3,7 @@ import json
 
 from storage.storage import Storage
 
-from src.config.backend_json import JSON_PATHS as PATHS
+from config.backend_json import JSON_PATHS as PATHS
 
 class JsonStorage(Storage):
     def __init__(self):
