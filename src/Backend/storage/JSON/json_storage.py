@@ -3,11 +3,7 @@ import json
 
 from storage.storage import Storage
 
-from .paths import RAW_DATA_FILE
-from .paths import PROCESSED_DATA_FILE
-from .paths import ALARMS_FILE
-from .paths import COMMANDS_FILE
-from .paths import LOGS_FILE
+from src.config.backend_json import JSON_PATHS as PATHS
 
 class JsonStorage(Storage):
     def __init__(self):
@@ -29,29 +25,29 @@ class JsonStorage(Storage):
 
         self._save(
             data,
-            RAW_DATA_FILE
+            PATHS.RAW_DATA_FILE
         )
     def save_processed(self, data):
 
         self._save(
             data,
-            PROCESSED_DATA_FILE
+            PATHS.PROCESSED_DATA_FILE
         )
     def save_alarm(self, data):
 
         self._save(
             data,
-            ALARMS_FILE
+            PATHS.ALARMS_FILE
         )
     def save_command(self, data):
 
         self._save(
             data,
-            COMMANDS_FILE
+            PATHS.COMMANDS_FILE
         )
     def save_log(self, data):
 
         self._save(
             data,
-            LOGS_FILE
+            PATHS.LOGS_FILE
         )
