@@ -2,17 +2,13 @@ import json
 import time
 import random
 import paho.mqtt.client as mqtt
-
-
-MQTT_BROKER = "mqtt"
-MQTT_PORT = 1883
-MQTT_TOPIC = "balloon/raw"
-
-SEND_INTERVAL = 1  # sekundy
+from config.mqtt import MQTTTopics as Topics
+from config.mqtt import MQTTConfig 
+from config.communication import Intervals
 
 
 client = mqtt.Client()
-client.connect(MQTT_BROKER, MQTT_PORT)
+client.connect(MQTTConfig.BROKER, MQTTConfig.PORT)
 
 
 def generate_test_data(): #Generuje testowe dane // w Przyszłosći zamiast tej funkcji będzie funckja odbierająca dane z balona 
@@ -41,13 +37,13 @@ def publish_test_data(): #publikuje testowe dane do backendu  // w przyszlosci z
         json_data = json.dumps(data)
 
         client.publish(
-            MQTT_TOPIC,
+            Topics.RAW,
             json_data
         )
 
         print("Published for backend:", json_data)
 
-        time.sleep(SEND_INTERVAL)
+        time.sleep(Intervals.SEND_INTERVAL)
 
 
 if __name__ == "__main__":

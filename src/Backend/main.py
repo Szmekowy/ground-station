@@ -5,11 +5,9 @@ from storage.JSON.json_storage import JsonStorage
 from storage.JSON.json_read import JsonReader
 from storage.database.database_storage import DatabaseStorage
 from storage.database.connection import get_session
+from config.mqtt import MQTTTopics as Topics
+from config.mqtt import MQTTConfig 
 
-MQTT_BROKER = "mqtt"
-MQTT_PORT = 1883
-MQTT_TOPIC_RAW = "balloon/raw"
-MQTT_TOPIC_PROCESSED = "balloon/processed"
 
 session = get_session()
 
@@ -51,7 +49,7 @@ def publish_data(data):
     json_data = json.dumps(data)
 
     client.publish(
-        MQTT_TOPIC_PROCESSED,
+        Topics.PROCESSED,
         json_data
     )
 
@@ -65,22 +63,22 @@ if __name__ == "__main__":
 
 
     client.connect( #połączenie z MQTT
-        MQTT_BROKER,
-        MQTT_PORT
+        MQTTConfig.BROKER,
+        MQTTConfig.PORT
     )
 
     #Połączenie backendu z Communication backend otrzymuje dane w balloon/raw
     client.subscribe(
-        MQTT_TOPIC_RAW
+        Topics.RAW
     )
 
 
     print(
-        f"Backend listening on {MQTT_TOPIC_RAW}"
+        f"Backend listening on {Topics.RAW}"
         
     )
     print(
-        f"Backend sending on {MQTT_TOPIC_PROCESSED}"
+        f"Backend sending on {Topics.PROCESSED}"
         
     )
 

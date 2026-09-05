@@ -26,6 +26,8 @@ services:
       - "8001:8001"
     depends_on:
       - mqtt
+    volumes:
+    - ./src/config:/workspace/config
 
   backend:
     build: ./src/Backend
@@ -37,6 +39,7 @@ services:
     volumes:
       - ./data:/workspace/data
       - ./tests:/workspace/tests
+      - ./src/config:/workspace/config
     environment:
     - PYTHONPATH=/workspace
   ai:
@@ -45,6 +48,8 @@ services:
       - "8003:8003"
     depends_on:
       - backend
+    volumes:
+    - ./src/config:/workspace/config
 
   ui:
     build: ./src/UI
@@ -56,6 +61,7 @@ services:
       - DISPLAY=${DISPLAY:-:0}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ./src/config:/workspace/config
 
 volumes:
   postgres_data:

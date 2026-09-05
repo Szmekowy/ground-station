@@ -341,7 +341,7 @@ AI/Test data generator -> MQTT -> Test receiver
 Docelowo powinno to isc w kierunku:
 
 ```text
-Balloon -> Communication -> MQTT/backend -> Backend -> UI/AI
+data -> Communication -> MQTT/backend -> Backend -> UI/AI
 ```
 
 Proponowany kolejny krok:
