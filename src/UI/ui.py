@@ -21,7 +21,7 @@ class UI:
         self._gui_ready = False
 
     def _cut_line_btn_pressed(self):
-        return
+        AlertManager.show_alert(AlertType.CUT_LINE_CONFIRMATION)
 
     def _reset_graphs_btn_pressed(self):
         return
@@ -49,7 +49,6 @@ class UI:
         with dpg.group(horizontal=True, height=30):
             dpg.add_button(label="Cut the Line", callback=self._cut_line_btn_pressed)
             dpg.add_button(label="Reset Telemetry", callback=self._reset_graphs_btn_pressed)
-            dpg.add_button(label="Test button", callback=self._test_btn_pressed)
 
     def initialize_ui(self):
         dpg.create_context()
@@ -71,7 +70,10 @@ class UI:
         dpg.setup_dearpygui()
         dpg.show_viewport()
 
+        AlertManager.cut_line_confirmation_callback = send_cut_line_request
+
         AlertManager.initialize()
+
 
         self._gui_ready = True
 
@@ -113,12 +115,14 @@ class UI:
         if reading <= LOW_BATTERY_THRESHOLD:
             self._on_low_battery(reading)
 
-    def _test_btn_pressed(self):
-        pass
-
     def _on_low_battery(self, battery_level: float):
         AlertManager.show_alert(AlertType.LOW_BATTERY)
+
 
 if __name__ == "__main__":
     ui = UI()
     ui.initialize_ui()
+
+
+def send_cut_line_request():
+    print("Line was cut")
