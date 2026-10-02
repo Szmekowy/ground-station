@@ -2,6 +2,10 @@ import dearpygui.dearpygui as dpg
 from ui_modules.alert import AlertManager, AlertType
 from ui_modules.topbar import Topbar
 
+from ui_modules.panels.panel import PanelType
+from ui_modules.panels.main_panel import MainPanel
+from ui_modules.panels.settings_panel import SettingsPanel
+
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 400
 
@@ -13,42 +17,17 @@ class UI:
     _altitude_readings = []
     _pressure_readings = []
 
-    def __init__(self):
-        self.battery_series = None
-        self.pressure_series = None
-        self.altitude_series = None
+    panels = [
+        PanelType.MainPanel,
+        PanelType.SettingsPanel
+    ]
 
+    def __init__(self):
         self._gui_ready = False
 
-    def _cut_line_btn_pressed(self):
-        AlertManager.show_alert(AlertType.CUT_LINE_CONFIRMATION)
-
-    def _reset_graphs_btn_pressed(self):
-        return
-
-    def _create_main_view(self):
-        Topbar.create()
-        with dpg.subplots(rows=2, columns=2, width=-1, height=-30):
-            with dpg.plot(label="Pressure (hPa)", height=-1, width=-1):
-                dpg.add_plot_legend()
-                dpg.add_plot_axis(dpg.mvXAxis, tag="pressure_x")
-                dpg.add_plot_axis(dpg.mvYAxis, tag="pressure_y")
-                self.pressure_series = dpg.add_line_series([], [], parent="pressure_y")
-
-            with dpg.plot(label="Altitude (m)", height=-1, width=-1):
-                dpg.add_plot_legend()
-                dpg.add_plot_axis(dpg.mvXAxis, tag="altitude_x")
-                dpg.add_plot_axis(dpg.mvYAxis, tag="altitude_y")
-                self.altitude_series = dpg.add_line_series([], [], parent="altitude_y")
-
-            with dpg.plot(label="GPS Coordinates", height=-1, width=-1):
-                dpg.add_plot_legend()
-                dpg.add_plot_axis(dpg.mvXAxis)
-                dpg.add_plot_axis(dpg.mvYAxis)
-
-        with dpg.group(horizontal=True, height=30):
-            dpg.add_button(label="Cut the Line", callback=self._cut_line_btn_pressed)
-            dpg.add_button(label="Reset Telemetry", callback=self._reset_graphs_btn_pressed)
+    def switch_panel(self, panel_type: PanelType):
+        for panel in self.panels:
+            dpg.configure_item(panel, show=(panel == panel_type))
 
     def initialize_ui(self):
         dpg.create_context()
@@ -64,7 +43,17 @@ class UI:
         )
 
         with dpg.window(tag="main_window"):
-            self._create_main_view()
+            Topbar.initialize()
+            with dpg.group(horizontal=True):
+                # Vertical navbar on the left side
+                with dpg.group(width=50):
+                    dpg.add_button(label="Main", callback = lambda: self.switch_panel(PanelType.MainPanel))
+                    dpg.add_button(label="Settings", callback = lambda: self.switch_panel(PanelType.SettingsPanel))
+
+                # Panels on the right
+                with dpg.group():
+                    MainPanel.initialize()
+                    SettingsPanel.initialize()
 
         dpg.set_primary_window("main_window", True)
         dpg.setup_dearpygui()
@@ -73,7 +62,7 @@ class UI:
         AlertManager.cut_line_confirmation_callback = send_cut_line_request
 
         AlertManager.initialize()
-
+        self.switch_panel(PanelType.MainPanel)
 
         self._gui_ready = True
 
@@ -90,7 +79,7 @@ class UI:
         xs = [r['time'] for r in self._altitude_readings]
         ys = [r['altitude'] for r in self._altitude_readings]
 
-        dpg.set_value(self.altitude_series, [xs, ys])
+        dpg.set_value(MainPanel.altitude_series, [xs, ys])
         dpg.fit_axis_data("altitude_x")
         dpg.fit_axis_data("altitude_y")
 
@@ -102,7 +91,7 @@ class UI:
         xs = [r['time'] for r in self._pressure_readings]
         ys = [r['pressure'] for r in self._pressure_readings]
 
-        dpg.set_value(self.pressure_series, [xs, ys])
+        dpg.set_value(MainPanel.pressure_series, [xs, ys])
         dpg.fit_axis_data("pressure_x")
         dpg.fit_axis_data("pressure_y")
 

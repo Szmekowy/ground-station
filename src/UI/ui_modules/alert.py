@@ -1,6 +1,5 @@
 import dearpygui.dearpygui as dpg
 from enum import Enum, auto
-# from collections.abc import Callable
 
 
 class AlertType(Enum):

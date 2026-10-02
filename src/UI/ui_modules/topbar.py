@@ -8,7 +8,7 @@ class Topbar:
     _start_time = datetime.now(_timezone)
 
     @classmethod
-    def create(cls):
+    def initialize(cls):
         with dpg.group(horizontal=True, horizontal_spacing=220):
             dpg.add_text("Telemetry Data", color=[0, 200, 255])
             with dpg.group(horizontal=True):
