@@ -1,128 +1,124 @@
+<div align="center">
+
 # Ground Station
 
-Prosta aplikacja podzielona na kilka części uruchamianych w Dockerze:
+### A modular desktop prototype for balloon telemetry monitoring
 
-- `Communication` - moduł komunikacji
-- `Backend` - logika backendu
-- `AI` - moduł AI
-- `UI` - interfejs użytkownika
+Ground Station follows telemetry from its source to a live operator dashboard. It combines MQTT-based communication, persistent mission data, and a native desktop UI in one Docker-powered local environment.
 
-Każda część ma swój własny `Dockerfile`, więc można uruchamiać moduły osobno. Całą aplikację najwygodniej odpala się przez `docker compose`.
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![MQTT](https://img.shields.io/badge/MQTT-Mosquitto-660066?logo=eclipsemosquitto&logoColor=white)](https://mqtt.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Dear PyGui](https://img.shields.io/badge/UI-Dear%20PyGui-2F80ED)](https://github.com/hoffstadt/DearPyGui)
 
-## Wymagania
+</div>
 
-Przed uruchomieniem trzeba mieć zainstalowane:
+## Overview
 
-- Docker
-- Docker Compose
+Ground Station is a local ground-control prototype for a balloon mission. It accepts telemetry, retains a history of the received data, prepares it for presentation, and displays the latest readings in a desktop dashboard.
 
-Sprawdzenie instalacji:
+The current application uses a simulated telemetry source, allowing the entire pipeline to run without flight hardware. The communication module is isolated from the rest of the system so that the generator can later be replaced by a real LoRa receiver.
 
-```bash
-docker --version
-docker compose version
+## How It Works
+
+Telemetry is generated once per second as a JSON message containing a timestamp, position, battery level, and pressure. The message is published to MQTT. Backend receives it, stores the original record, creates a processed payload for the interface, stores that version too, and publishes it back through MQTT. The desktop UI then refreshes its battery indicator and charts.
+
+```mermaid
+flowchart LR
+    source[Telemetry Source] -->|balloon/raw| broker[MQTT Broker]
+    broker --> backend[Backend]
+    backend --> database[(PostgreSQL)]
+    backend -->|balloon/processed| broker
+    broker --> ui[Desktop UI]
 ```
 
-## Uruchamianie pojedynczej części
+### Components at a glance
 
-Każdy użytkownik może odpalić tylko swoją część aplikacji. Schemat jest taki sam dla wszystkich modułów:
+- **Communication** — generates the current test telemetry and publishes it to `balloon/raw`. A hardware-oriented LoRa prototype is included separately, but it is not the Docker entry point today.
+- **MQTT Broker** — the event hub between services. It lets producers and consumers exchange telemetry through named topics without direct dependencies.
+- **Backend** — subscribes to raw telemetry, produces the current dashboard payload, and persists raw and processed records.
+- **PostgreSQL** — the active storage used by the running backend for mission telemetry history.
+- **Desktop UI** — a Dear PyGui application that listens for processed telemetry and draws live status and charts.
+- **AI** — an included Docker service reserved for future analysis. Its current implementation is a placeholder and is not part of the data flow.
 
-```bash
-docker build -t nazwa-obrazu ./src/NazwaModulu
-docker run --rm -p port:port nazwa-obrazu
-```
+## What You Can See Today
 
-Przykłady dla konkretnych modułów:
+- Live **battery**, **altitude**, and **pressure** updates driven by MQTT messages.
+- A top bar with local time, application uptime, and the latest battery percentage.
+- A low-battery modal alert when battery level reaches **60% or below**.
+- Raw and processed telemetry records persisted in PostgreSQL.
+- A Docker Compose environment containing the broker, database, Communication, Backend, AI, and UI services.
 
-### Communication
+The dashboard also contains a GPS panel and **Cut the Line** / **Reset Telemetry** controls. They are visual scaffolding at this stage and do not yet perform mission actions.
 
-```bash
-docker build -t ground-communication ./src/Communication
-docker run --rm -p 8001:8001 ground-communication
-```
+## Technologies
 
-### Backend
+| Technology | Purpose |
+| :-- | :-- |
+| [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)](https://www.python.org/) | Application services and telemetry processing. |
+| [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) | Reproducible environment for the complete local stack. |
+| [![MQTT](https://img.shields.io/badge/MQTT-660066?logo=eclipsemosquitto&logoColor=white)](https://mqtt.org/) | Lightweight telemetry transport between modules. |
+| [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/) | Persistent raw and processed telemetry storage. |
+| [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/) | Database modelling and persistence layer. |
+| [![Dear PyGui](https://img.shields.io/badge/Dear%20PyGui-2F80ED)](https://github.com/hoffstadt/DearPyGui) | Native live telemetry dashboard. |
 
-```bash
-docker build -t ground-backend ./src/Backend
-docker run --rm -p 8002:8002 ground-backend
-```
+The repository also includes a JSON storage implementation and recursive validation helpers. They are available for development and future integration; the active runtime path currently uses PostgreSQL and does not invoke validation before persistence.
 
-### AI
+## Quick Start
 
-```bash
-docker build -t ground-ai ./src/AI
-docker run --rm -p 8003:8003 ground-ai
-```
+### Requirements
 
-### UI
+- Docker Engine and Docker Compose
+- Linux desktop session with X11 support for the native UI window
+- `xhost` available on the host system
 
-```bash
-docker build -t ground-ui ./src/UI
-# linux / windows (wsl)
-xhost +local:docker
-docker run --rm \
-  -e DISPLAY=$DISPLAY \
-  -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-  -p 8000:8000 ground-ui
-```
-
-Po uruchomieniu kontener wypisuje logi w terminalu. Zatrzymanie kontenera: `Ctrl+C`.
-
-## Uruchamianie całej aplikacji
-
-Do uruchomienia wszystkich części naraz służy plik `docker-compose.yml`.
-
-Start aplikacji:
+### Run the stack
 
 ```bash
-docker compose up --build
+git clone <repository-url>
+cd ground-station
+./start.sh
 ```
 
-Ta komenda:
+The executable `start.sh` grants the UI container local X11 access, builds the images, and runs Docker Compose. The terminal displays service logs and the **Pi Dashboard** should open as a native desktop window.
 
-- buduje obrazy dla wszystkich modułów,
-- uruchamia `communication`, `backend`, `ai` i `ui`,
-- wystawia porty:
-  - `UI`: `8000`
-  - `Communication`: `8001`
-  - `Backend`: `8002`
-  - `AI`: `8003`
+> **One-time database setup:** the current prototype keeps schema creation as a separate step. With a new PostgreSQL volume, open a second terminal after the stack starts and run:
+>
+> ```bash
+> docker compose exec backend python storage/database/init_db.py
+> ```
+>
+> Restart the stack with `Ctrl+C` and `./start.sh` if telemetry was sent before the tables were created.
 
-Zatrzymanie aplikacji:
+Use `Ctrl+C` to stop the foreground stack. To remove stopped containers while keeping the database volume, run:
 
 ```bash
 docker compose down
 ```
 
-Uruchomienie w tle:
+> The UI is not a browser application. macOS and Windows users need an X server and appropriate `DISPLAY` configuration, or can run the non-UI services only.
 
-```bash
-docker compose up --build -d
+## Project Structure
+
+```text
+ground-station/
+├── src/
+│   ├── Communication/        # simulated telemetry and LoRa-oriented prototype
+│   ├── Backend/              # MQTT processing, storage, validation helpers
+│   ├── UI/                   # Dear PyGui dashboard and low-battery alert
+│   ├── AI/                   # placeholder analysis service
+│   └── config/               # shared MQTT topics and application settings
+├── data/                     # development data and logs
+├── tests/                    # database samples and MQTT experiments
+├── docker-compose.yml        # complete local service stack
+└── start.sh                  # Docker-based application startup
 ```
 
-Podgląd logów:
+## Current Direction
 
-```bash
-docker compose logs -f
-```
+Ground Station is structured to grow from a local simulation into a hardware-connected mission tool. The next areas of work include connecting live LoRa telemetry, wiring validation and alarm persistence into Backend, activating the AI service for analysis, and making UI controls part of a safe command workflow.
 
-Podgląd logów tylko jednego modułu:
+---
 
-```bash
-docker compose logs -f ui
-docker compose logs -f backend
-docker compose logs -f communication
-docker compose logs -f ai
-```
-
-## Jak działa Docker Compose w tym projekcie
-
-`docker-compose.yml` opisuje cztery serwisy:
-
-- `communication` budowany z `./src/Communication` i dostępny na porcie `8001`
-- `backend` budowany z `./src/Backend`, dostępny na porcie `8002` i uruchamiany po `communication`
-- `ai` budowany z `./src/AI`, dostępny na porcie `8003` i uruchamiany po `backend`
-- `ui` budowany z `./src/UI`, dostępny na porcie `8000` i uruchamiany po `backend`
-
-Dzięki temu nie trzeba ręcznie uruchamiać każdego kontenera osobno. Compose tworzy wspólną sieć dla serwisów i startuje je w odpowiedniej kolejności.
+Built as a practical foundation for clear, reliable balloon-mission telemetry.
