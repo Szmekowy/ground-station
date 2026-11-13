@@ -25,12 +25,12 @@ The current application uses a simulated telemetry source, allowing the entire p
 Telemetry is generated once per second as a JSON message containing a timestamp, position, battery level, and pressure. The message is published to MQTT. Backend receives it, stores the original record, creates a processed payload for the interface, stores that version too, and publishes it back through MQTT. The desktop UI then refreshes its battery indicator and charts.
 
 ```mermaid
-flowchart LR
-    source[Telemetry Source] -->|balloon/raw| broker[MQTT Broker]
-    broker --> backend[Backend]
-    backend --> database[(PostgreSQL)]
-    backend -->|balloon/processed| broker
-    broker --> ui[Desktop UI]
+graph LR
+    A[Telemetry Source] --> B[MQTT Broker]
+    B --> C[Backend]
+    C --> D[(PostgreSQL)]
+    C --> B
+    B --> E[Desktop UI]
 ```
 
 ### Components at a glance
